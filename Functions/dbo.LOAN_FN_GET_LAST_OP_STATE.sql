@@ -1,0 +1,19 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[LOAN_FN_GET_LAST_OP_STATE](@loan_id int)
+RETURNS tinyint
+AS
+BEGIN
+	DECLARE
+		@op_state tinyint
+
+	SELECT @op_state = OP_STATE
+	FROM dbo.LOAN_OPS (NOLOCK)
+	WHERE OP_ID = dbo.LOAN_FN_GET_LAST_OP_ID(@loan_id)
+
+	RETURN @op_state
+END
+GO

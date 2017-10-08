@@ -1,0 +1,20 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[CALL_CENTER_ADD_CODE] (@envelope_no int, @phone_code int, @dept_no int, @user_id int)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	
+	IF NOT EXISTS(SELECT * FROM dbo.CALL_CENTER_CODES WHERE PHONE_CODE = @phone_code)
+	BEGIN
+		INSERT INTO dbo.CALL_CENTER_CODES (ENVELOPE_NO, PHONE_CODE, DEPT_NO, DT_TM, [USER_ID], [STATUS], IS_BLOCKED)
+		VALUES (@envelope_no, @phone_code, @dept_no, GETDATE(), @user_id, 0, 0)
+		
+		RETURN 0
+	END
+	
+	RETURN 1
+END	
+GO

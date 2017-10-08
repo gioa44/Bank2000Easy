@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[LOAN_VW_LOAN_OP_WRITEOFF]
+AS
+SELECT
+		OP_ID,
+		LOAN_ID,
+		OP_DATA.value('(row/@PENALTY)[1]', 'money') AS PENALTY,
+		OP_DATA.value('(row/@OVERDUE_PERCENT)[1]', 'money') AS OVERDUE_PERCENT,
+		OP_DATA.value('(row/@OVERDUE_PRINCIPAL)[1]', 'money') AS OVERDUE_PRINCIPAL,
+		OP_DATA.value('(row/@INTEREST)[1]', 'money') AS INTEREST,
+		OP_DATA.value('(row/@PRINCIPAL)[1]', 'money') AS PRINCIPAL
+	FROM dbo.LOAN_OPS
+	WHERE OP_TYPE = dbo.loan_const_op_writeoff()
+GO

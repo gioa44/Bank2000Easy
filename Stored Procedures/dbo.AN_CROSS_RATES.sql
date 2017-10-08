@@ -1,0 +1,34 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+
+CREATE PROCEDURE [dbo].[AN_CROSS_RATES]
+  @iso1 TISO,
+  @iso2 TISO = 'GEL',
+  @start_date smalldatetime = 0,
+  @end_date smalldatetime = 65535
+AS
+SET NOCOUNT ON
+
+IF @iso1 = 'GEL' 
+  SELECT A.DT,A.ITEMS/A.AMOUNT AS RATE
+  FROM VAL_RATES A
+  WHERE A.DT BETWEEN @start_date AND @end_date AND A.ISO=@iso2
+  ORDER BY A.DT
+ELSE
+IF @iso2 = 'GEL' 
+  SELECT A.DT,A.AMOUNT/A.ITEMS AS RATE
+  FROM VAL_RATES A
+  WHERE A.DT BETWEEN @start_date AND @end_date AND A.ISO=@iso1
+  ORDER BY A.DT
+ELSE  
+  SELECT A.DT,(A.AMOUNT*B.ITEMS)/(B.AMOUNT*A.ITEMS) AS RATE
+  FROM VAL_RATES A, VAL_RATES B
+  WHERE A.DT=B.DT AND A.DT BETWEEN @start_date AND @end_date AND A.ISO=@iso1 AND B.ISO=@iso2 
+  ORDER BY A.DT
+
+
+GO

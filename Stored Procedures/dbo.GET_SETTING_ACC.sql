@@ -1,0 +1,23 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[GET_SETTING_ACC]
+	@param_name varchar(20),
+	@acc_val TACCOUNT OUTPUT
+AS
+
+SET NOCOUNT ON;
+
+SET @acc_val = NULL
+
+SELECT @acc_val = CONVERT(decimal(15,0), VALS)
+FROM dbo.INI_INT (NOLOCK)
+WHERE IDS = @param_name
+
+IF @acc_val IS NULL 
+	RETURN (1)
+ELSE
+	RETURN (0)
+GO

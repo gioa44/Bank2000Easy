@@ -1,0 +1,4 @@
+CREATE TYPE [dbo].[TISO] FROM char (3) NOT NULL
+GO
+GRANT REFERENCES ON TYPE:: [dbo].[TISO] TO [public]
+GO

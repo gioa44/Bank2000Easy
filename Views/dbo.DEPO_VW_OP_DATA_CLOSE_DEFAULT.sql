@@ -1,0 +1,25 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_CLOSE_DEFAULT]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@DEPO_REALIZE_AMOUNT)[1]', 'money') AS DEPO_REALIZE_AMOUNT,
+		OP_DATA.value('(row/@DEPO_REALIZE_INTEREST)[1]', 'money') AS DEPO_REALIZE_INTEREST,
+		OP_DATA.value('(row/@LAST_REALIZE_DATE)[1]', 'smalldatetime') AS LAST_REALIZE_DATE,
+		OP_DATA.value('(row/@CALC_AMOUNT)[1]', 'money') AS CALC_AMOUNT,
+		OP_DATA.value('(row/@TOTAL_CALC_AMOUNT)[1]', 'money') AS TOTAL_CALC_AMOUNT,
+		OP_DATA.value('(row/@DEPO_REALIZE_ACC_ID)[1]', 'int') AS DEPO_REALIZE_ACC_ID,
+		OP_DATA.value('(row/@INTEREST_REALIZE_ACC_ID)[1]', 'int') AS INTEREST_REALIZE_ACC_ID,
+		OP_DATA.value('(row/@DEPO_PREV_STATE)[1]', 'tinyint') AS DEPO_PREV_STATE,
+		OP_DATA.value('(row/@ANNUL_INTRATE)[1]', 'money') AS ANNUL_INTRATE,
+		OP_DATA.value('(row/@TOTAL_TAX_PAYED_AMOUNT)[1]', 'money') AS TOTAL_TAX_PAYED_AMOUNT,
+		OP_DATA.value('(row/@TOTAL_TAX_PAYED_AMOUNT_EQU)[1]', 'money') AS TOTAL_TAX_PAYED_AMOUNT_EQU,
+		OP_DATA.value('(row/@ACC_ARC_REC_ID)[1]', 'int') AS ACC_ARC_REC_ID
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_close_default()
+GO

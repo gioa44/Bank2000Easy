@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+
+CREATE FUNCTION [dbo].[LOAN_FN_LOAN_FIRST_PROLONG_DATE] (@loan_id int)
+	RETURNS smalldatetime
+AS
+BEGIN
+	RETURN (SELECT MIN(OP_DATE) FROM dbo.LOAN_OPS WHERE LOAN_ID = @loan_id AND OP_TYPE = dbo.loan_const_op_prolongation())
+END
+GO

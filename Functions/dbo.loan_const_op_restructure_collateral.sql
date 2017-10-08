@@ -1,0 +1,11 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[loan_const_op_restructure_collateral]()
+RETURNS tinyint AS
+BEGIN
+	RETURN (114)
+END
+GO

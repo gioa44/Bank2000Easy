@@ -1,0 +1,19 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[LOAN_FN_GET_LAST_OP_ID](@loan_id int)
+RETURNS int
+AS
+BEGIN
+	DECLARE
+		@last_op_id int
+
+	SELECT @last_op_id = MAX(OP_ID)
+	FROM dbo.LOAN_OPS (NOLOCK)
+	WHERE LOAN_ID = @loan_id
+
+	RETURN @last_op_id
+END
+GO

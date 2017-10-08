@@ -1,0 +1,95 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[SYS_BUILD_SALDOS_TABLE] AS
+
+SET NOCOUNT ON
+
+PRINT 'Rebuilding SALDOS (SALDOS_XXXX)'
+
+BEGIN TRANSACTION
+SET QUOTED_IDENTIFIER ON
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
+
+
+CREATE TABLE dbo.TEMP_BALANCES (
+	ACC_ID int NOT NULL, 
+	DT smalldatetime NOT NULL, 
+	DBO money NULL, 
+	CRO money NULL, 
+	BALANCE money NULL
+)
+
+PRINT 'Inserting all OPS (2)'
+
+INSERT INTO dbo.TEMP_BALANCES (ACC_ID, DT, DBO, CRO, BALANCE)
+SELECT H.ACC_ID, H.DT, SUM(H.D), SUM(H.C), $0.0000
+FROM (
+	SELECT DEBIT_ID AS ACC_ID, DOC_DATE AS DT, AMOUNT AS D, $0.0000 AS C FROM dbo.OPS_ARC
+	UNION ALL
+	SELECT CREDIT_ID, DOC_DATE, $0.0000, AMOUNT FROM dbo.OPS_ARC) H
+GROUP BY H.ACC_ID, H.DT
+
+PRINT 'Adding primary key'
+ALTER TABLE dbo.TEMP_BALANCES ADD CONSTRAINT PK_TEMP_BALANCES PRIMARY KEY (ACC_ID, DT)
+
+DECLARE 
+	@balance money,
+	@acc_id int
+
+SET @balance = $0.0000
+SET @acc_id = -1
+
+-- NOW SET ACTUAL BALANCES
+
+PRINT 'Updating saldos'
+
+UPDATE dbo.TEMP_BALANCES
+SET @balance = CASE WHEN @acc_id = ACC_ID THEN @balance ELSE $0.00 END,
+	@acc_id = ACC_ID,
+	@balance = @balance + DBO - CRO,
+	BALANCE = @balance
+	
+
+-- NOW ADD RECORDS WITH JAN 01
+
+PRINT 'Adding Jan 01 records'
+
+DECLARE 
+  @date smalldatetime,
+  @first_bank_date smalldatetime,
+  @last_bank_date smalldatetime
+  
+SET @first_bank_date = dbo.bank_first_date()
+SET @last_bank_date = dbo.bank_open_date() - 1
+
+SET @date = dbo.first_day_of_year(@first_bank_date)
+
+WHILE @date <= @last_bank_date
+BEGIN
+	INSERT INTO dbo.TEMP_BALANCES (ACC_ID, DT, DBO, CRO, BALANCE)
+	SELECT A.ACC_ID, @date, $0.0000, $0.0000, A.BALANCE
+	FROM dbo.TEMP_BALANCES A (NOLOCK) 
+	WHERE (A.BALANCE <> $0.0000) AND 
+		A.DT = (SELECT MAX(B.DT) FROM dbo.TEMP_BALANCES B (NOLOCK) WHERE B.ACC_ID = A.ACC_ID AND B.DT < @date) AND
+		NOT EXISTS(SELECT * FROM dbo.TEMP_BALANCES C (NOLOCK) WHERE C.ACC_ID = A.ACC_ID AND C.DT = @date)
+
+	SET @date = DATEADD(yy, 1, @date)
+END
+
+PRINT 'Deleting from dbo.SALDOS'
+
+DELETE FROM dbo.SALDOS
+
+PRINT 'Inserting to dbo.SALDOS'
+
+INSERT INTO dbo.SALDOS (ACC_ID, DT, DBO, CRO, SALDO)
+SELECT ACC_ID, DT, DBO, CRO, BALANCE
+FROM dbo.TEMP_BALANCES
+
+DROP TABLE dbo.TEMP_BALANCES
+
+COMMIT
+GO

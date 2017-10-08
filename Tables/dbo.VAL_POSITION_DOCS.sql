@@ -1,0 +1,7 @@
+CREATE TABLE [dbo].[VAL_POSITION_DOCS]
+(
+[DOC_DATE] [smalldatetime] NOT NULL,
+[AMOUNT] [dbo].[TAMOUNT] NOT NULL,
+[ISO] [dbo].[TISO] NOT NULL
+) ON [PRIMARY]
+GO

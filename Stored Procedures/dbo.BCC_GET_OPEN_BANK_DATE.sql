@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE  PROCEDURE [dbo].[BCC_GET_OPEN_BANK_DATE]
+  @dt smalldatetime OUTPUT
+AS
+
+SET NOCOUNT ON
+
+SET @dt = dbo.bank_open_date()
+GO

@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[plastic_card_accounts_count](@rec_id int)
+RETURNS int
+BEGIN
+	DECLARE
+		@res int
+
+	SELECT	@res = COUNT(*) 
+	FROM	PLASTIC_CARD_ACCOUNTS_FOR_SEND
+	WHERE	REC_ID = @rec_id
+	RETURN @res
+
+END
+GO

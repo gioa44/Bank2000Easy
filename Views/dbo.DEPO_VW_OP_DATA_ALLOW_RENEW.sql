@@ -1,0 +1,25 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_ALLOW_RENEW]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@PREV_RENEWABLE)[1]', 'bit') AS PREV_RENEWABLE,
+		OP_DATA.value('(row/@PREV_RENEW_CAPITALIZED)[1]', 'bit') AS PREV_RENEW_CAPITALIZED,
+		OP_DATA.value('(row/@PREV_RENEW_MAX)[1]', 'int') AS PREV_RENEW_MAX,
+		OP_DATA.value('(row/@PREV_RENEW_COUNT)[1]', 'int') AS PREV_RENEW_COUNT,
+		OP_DATA.value('(row/@PREV_RENEW_LAST_PROD_ID)[1]', 'int') AS PREV_RENEW_LAST_PROD_ID,
+		OP_DATA.value('(row/@PREV_LAST_RENEW_DATE)[1]', 'smalldatetime') AS PREV_LAST_RENEW_DATE,
+		OP_DATA.value('(row/@RENEWABLE)[1]', 'bit') AS RENEWABLE,
+		OP_DATA.value('(row/@RENEW_CAPITALIZED)[1]', 'bit') AS RENEW_CAPITALIZED,
+		OP_DATA.value('(row/@RENEW_MAX)[1]', 'int') AS RENEW_MAX,
+		OP_DATA.value('(row/@RENEW_COUNT)[1]', 'int') AS RENEW_COUNT,
+		OP_DATA.value('(row/@RENEW_LAST_PROD_ID)[1]', 'int') AS RENEW_LAST_PROD_ID,
+		OP_DATA.value('(row/@LAST_RENEW_DATE)[1]', 'smalldatetime') AS LAST_RENEW_DATE
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_allow_renew()
+GO

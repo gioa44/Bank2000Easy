@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[so_get_ref_no]
+	@ref_no int OUTPUT
+AS
+	UPDATE dbo.INI_INT 
+		SET  VALS = VALS + 1, @ref_no = VALS
+	WHERE IDS = 'SO_REF_NO'
+	
+	IF (@@ROWCOUNT = 0)
+	BEGIN
+		INSERT INTO dbo.INI_INT (IDS, VALS)
+			VALUES ('SO_REF_NO', 2)
+		SET @ref_no = 1
+	END
+GO

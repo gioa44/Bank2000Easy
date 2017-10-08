@@ -1,0 +1,66 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[INCASSO_ACCOUNTS_SET_FLAG]
+	@incasso_id int OUTPUT,
+	@user_id int,
+	@incasso_flag bit = 1
+AS
+
+SET NOCOUNT ON
+
+DECLARE
+	@r int,
+	@acc_id int
+
+BEGIN TRAN
+
+DECLARE cc CURSOR LOCAL FOR
+SELECT ACC_ID 
+FROM dbo.INCASSO_ACCOUNTS (NOLOCK)
+WHERE INCASSO_ID = @incasso_id
+
+OPEN cc
+IF @@ERROR <> 0  GOTO RollBackThisTrans1
+
+FETCH NEXT FROM cc INTO @acc_id
+IF @@ERROR <> 0 GOTO RollBackThisTrans1
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	IF @incasso_flag = 0
+	BEGIN
+		IF EXISTS(
+			SELECT * 
+			FROM dbo.INCASSO_ACCOUNTS IA
+				INNER JOIN dbo.INCASSO I ON I.REC_ID = IA.INCASSO_ID
+			WHERE IA.ACC_ID = @acc_id AND IA.INCASSO_ID <> @incasso_id AND I.BALANCE > $0.00
+		)
+		SET @incasso_flag = 1
+	END
+
+	UPDATE dbo.ACCOUNTS
+	SET	IS_INCASSO = @incasso_flag
+	WHERE ACC_ID = @acc_id
+	IF @@ERROR <> 0 GOTO RollBackThisTrans1
+
+	FETCH NEXT FROM cc INTO @acc_id
+	IF @@ERROR <> 0 GOTO RollBackThisTrans1
+END
+
+CLOSE cc
+DEALLOCATE cc
+
+COMMIT
+
+RETURN @@ERROR
+
+RollBackThisTrans1:
+
+CLOSE cc
+DEALLOCATE cc
+
+ROLLBACK
+RETURN 1
+GO

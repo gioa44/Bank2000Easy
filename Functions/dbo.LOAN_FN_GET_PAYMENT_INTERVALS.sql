@@ -1,0 +1,28 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[LOAN_FN_GET_PAYMENT_INTERVALS](@start_date smalldatetime, @end_date smalldatetime, @interval_types int)
+RETURNS
+	@T TABLE (
+		TYPE_ID			int primary key NOT NULL, 
+		DESCRIP			varchar (150) NOT NULL,
+		DESCRIP_LAT		varchar (150),
+		INTERVAL		money NOT NULL,
+		PAYMENT_COUNT	int NOT NULL)
+AS
+BEGIN
+	INSERT INTO @T(TYPE_ID, DESCRIP, DESCRIP_LAT, INTERVAL, PAYMENT_COUNT)
+	SELECT TYPE_ID, DESCRIP, DESCRIP_LAT, INTERVAL,
+		CASE
+			WHEN INTERVAL = 0 THEN 1
+			WHEN INTERVAL < 1 THEN DATEDIFF(dd, @start_date, @end_date) / (INTERVAL * 100)
+			ELSE DATEDIFF(mm, @start_date, @end_date) / INTERVAL
+		END
+	FROM dbo.LOAN_PAYMENT_INTERVALS
+	WHERE TYPE_ID &	@interval_types <> 0 AND ((INTERVAL = 0) OR
+		(CASE WHEN INTERVAL < 1 THEN DATEADD(dd, INTERVAL * 100, @start_date) ELSE DATEADD(mm, INTERVAL, @start_date) END <= @end_date))
+  RETURN
+END
+GO

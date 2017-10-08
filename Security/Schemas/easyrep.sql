@@ -1,0 +1,3 @@
+CREATE SCHEMA [easyrep]
+AUTHORIZATION [dbo]
+GO

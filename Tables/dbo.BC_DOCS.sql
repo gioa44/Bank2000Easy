@@ -1,0 +1,32 @@
+CREATE TABLE [dbo].[BC_DOCS]
+(
+[REC_ID] [int] NOT NULL,
+[UID] [int] NOT NULL,
+[DOC_DATE] [smalldatetime] NOT NULL,
+[DOC_DATE_IN_DOC] [smalldatetime] NULL,
+[ISO] [dbo].[TISO] NOT NULL,
+[AMOUNT] [money] NOT NULL,
+[AMOUNT_EQU] [money] NOT NULL,
+[DOC_NUM] [int] NULL,
+[OP_CODE] [dbo].[TOPCODE] NULL,
+[DEBIT] [dbo].[TACCOUNT] NOT NULL,
+[CREDIT] [dbo].[TACCOUNT] NOT NULL,
+[REC_STATE] [tinyint] NOT NULL,
+[BNK_CLI_ID] [int] NULL,
+[DESCRIP] [varchar] (150) COLLATE Latin1_General_BIN NULL,
+[PARENT_REC_ID] [int] NULL,
+[OWNER] [int] NOT NULL,
+[DOC_TYPE] [smallint] NOT NULL,
+[ACCOUNT_EXTRA] [dbo].[TACCOUNT] NULL,
+[PROD_ID] [int] NULL,
+[FOREIGN_ID] [int] NULL,
+[CHANNEL_ID] [int] NULL,
+[DEPT_NO] [int] NULL,
+[IS_SUSPICIOUS] [bit] NULL,
+[CASHIER] [int] NULL,
+[CHK_SERIE] [varchar] (4) COLLATE Latin1_General_BIN NULL,
+[CASH_AMOUNT] [money] NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[BC_DOCS] ADD CONSTRAINT [PK_BC_DOCS] PRIMARY KEY CLUSTERED  ([REC_ID]) ON [PRIMARY]
+GO

@@ -1,0 +1,49 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[depo_sp_get_depo_history_op_data]
+	@depo_id int
+AS
+
+BEGIN
+
+DECLARE 
+	@start_date smalldatetime,
+	@record_count int
+
+SELECT @start_date = [START_DATE]
+FROM DEPO_DEPOSITS (NOLOCK)
+WHERE DEPO_ID = @depo_id
+
+CREATE TABLE #tbl (OP_NO INT PRIMARY KEY NOT NULL, DEPO_ID int NOT NULL, 
+					OP_ID int NOT NULL, OP_DATE smalldatetime NULL, 
+					DESCRIP varchar(250) NOT NULL)
+
+INSERT INTO #tbl
+(OP_NO, DEPO_ID,OP_ID, OP_DATE, DESCRIP)
+VALUES(0, @depo_id, 0, @start_date,  'ÓÀßÚÉÓÉ')
+
+
+INSERT INTO #tbl
+(OP_NO, DEPO_ID,OP_ID, OP_DATE, DESCRIP)
+SELECT ROW_NUMBER() OVER(ORDER BY DO.OP_ID) AS OP_NO, D.DEPO_ID, D.OP_ID, DO.OP_DATE, DOT.DESCRIP	
+FROM dbo.DEPO_DEPOSITS_HISTORY D (NOLOCK)
+	INNER JOIN dbo.DEPO_OP DO (NOLOCK) ON D.OP_ID = DO.OP_ID
+	INNER JOIN dbo.DEPO_OP_TYPES DOT (NOLOCK) ON DOT.TYPE_ID = DO.OP_TYPE
+WHERE D.DEPO_ID = @depo_id
+
+SELECT @record_count = COUNT(*) FROM #tbl
+
+INSERT INTO #tbl
+(OP_NO, DEPO_ID,OP_ID, OP_DATE, DESCRIP)
+VALUES(@record_count, @depo_id, -1, NULL,  'ÌÉÌÃÉÍÀÒÄ')
+
+SELECT * FROM #tbl
+ORDER BY OP_NO
+
+DROP TABLE #tbl
+
+END
+GO

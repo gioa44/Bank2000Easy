@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_BONUS]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@BONUS_AMOUNT)[1]', 'money') AS BONUS_AMOUNT,
+		OP_DATA.value('(row/@REMARK)[1]', 'varchar(255)') AS REMARK
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_bonus()
+GO

@@ -1,0 +1,2 @@
+CREATE TYPE [dbo].[TDESCRIP] FROM varchar (150) NULL
+GO

@@ -1,0 +1,114 @@
+CREATE TABLE [impexp].[DOCS_OUT_NBG]
+(
+[DOC_REC_ID] [int] NOT NULL,
+[UID] [int] NOT NULL,
+[DOC_DATE] [smalldatetime] NOT NULL,
+[PORTION_DATE] [smalldatetime] NOT NULL,
+[PORTION] [int] NOT NULL,
+[OLD_FLAGS] [int] NOT NULL,
+[NDOC] [char] (4) COLLATE Latin1_General_BIN NULL,
+[DATE] [smalldatetime] NOT NULL,
+[NFA] [int] NOT NULL,
+[NLS] [varchar] (9) COLLATE Latin1_General_BIN NOT NULL,
+[SUM] [money] NOT NULL,
+[NFB] [int] NOT NULL,
+[NLSK] [varchar] (50) COLLATE Latin1_General_BIN NOT NULL,
+[GIK] [varchar] (11) COLLATE Latin1_General_BIN NULL,
+[NLS_AX] [varchar] (34) COLLATE Latin1_General_BIN NOT NULL,
+[MIK] [varchar] (11) COLLATE Latin1_General_BIN NULL,
+[NLSK_AX] [varchar] (34) COLLATE Latin1_General_BIN NOT NULL,
+[BANK_A] [char] (3) COLLATE Latin1_General_BIN NOT NULL,
+[BANK_B] [char] (3) COLLATE Latin1_General_BIN NOT NULL,
+[GB] [varchar] (50) COLLATE Latin1_General_BIN NOT NULL,
+[G_O] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[MB] [varchar] (50) COLLATE Latin1_General_BIN NOT NULL,
+[M_O] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[GD] [varchar] (200) COLLATE Latin1_General_BIN NOT NULL,
+[REC_DATE] [smalldatetime] NOT NULL,
+[SAXAZKOD] [varchar] (9) COLLATE Latin1_General_BIN NULL,
+[DAMINF] [varchar] (250) COLLATE Latin1_General_BIN NULL,
+[ROW_ID] [int] NULL,
+[OP_CODE] [varchar] (5) COLLATE Latin1_General_BIN NULL,
+[THP_NAME] [varchar] (100) COLLATE Latin1_General_BIN NULL
+) ON [PRIMARY]
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE TRIGGER [impexp].[ON_DOCS_OUT_NBG_UPDATE] ON [impexp].[DOCS_OUT_NBG]
+INSTEAD OF INSERT,DELETE,UPDATE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE
+		@portion_date smalldatetime, 
+		@portion int,
+		@amount money,
+		@count int
+
+	DECLARE cc CURSOR LOCAL FORWARD_ONLY
+	FOR
+
+	SELECT PORTION_DATE, PORTION, SUM(AMOUNT), SUM ([COUNT])
+	FROM 
+		(	SELECT PORTION_DATE, PORTION, [SUM] AS AMOUNT, 1 AS [COUNT] FROM inserted
+			UNION ALL
+			SELECT PORTION_DATE, PORTION, -[SUM] AS AMOUNT, -1 AS [COUNT] FROM deleted
+		) A
+	GROUP BY PORTION_DATE, PORTION
+	
+	OPEN cc
+	FETCH NEXT FROM cc INTO @portion_date, @portion, @amount, @count
+	
+	WHILE @@FETCH_STATUS = 0 
+	BEGIN
+		IF @portion_date < dbo.bank_open_date()
+		BEGIN
+			RAISERROR ('ÞÅÄËÉ ÈÀÒÉÙÉÈ ÐÏÒÝÉÀÓÈÀÍ ÌÏØÌÄÃÄÁÀ ÀÒ ÛÄÉÞËÄÁÀ',16,1)
+			ROLLBACK
+			RETURN
+		END
+
+		IF NOT EXISTS(SELECT * FROM impexp.PORTIONS_OUT_NBG WHERE PORTION_DATE = @portion_date AND PORTION = @portion)
+		BEGIN
+			INSERT INTO impexp.PORTIONS_OUT_NBG (PORTION_DATE, PORTION, STATE, AMOUNT, CREATION_TIME)
+			VALUES (@portion_date, @portion, 1, $0.00, getdate())
+
+			IF @@ERROR <> 0 BEGIN ROLLBACK RETURN END
+		END
+
+		UPDATE impexp.PORTIONS_OUT_NBG
+		SET AMOUNT = AMOUNT + @amount, [COUNT] = [COUNT] + @count 
+		WHERE PORTION_DATE = @portion_date AND PORTION = @portion
+
+		FETCH NEXT FROM cc INTO @portion_date, @portion, @amount, @count
+	END
+
+	DECLARE @tbl TABLE(DOC_REC_ID int NOT NULL, REC_ID int NOT NULL, [USER_ID] int NOT NULL, DATE_TIME smalldatetime NOT NULL, CHANGE_TYPE int NOT NULL, DESCRIP varchar(255) NOT NULL)
+
+	INSERT INTO @tbl(DOC_REC_ID, REC_ID, [USER_ID], DATE_TIME, CHANGE_TYPE, DESCRIP)
+	SELECT A.DOC_REC_ID, A.REC_ID, A.[USER_ID], A.DATE_TIME, A.CHANGE_TYPE, A.DESCRIP
+	FROM impexp.DOCS_OUT_NBG_CHANGES A
+		INNER JOIN deleted ON deleted.DOC_REC_ID = A.DOC_REC_ID
+
+	DELETE A
+	FROM impexp.DOCS_OUT_NBG A
+		INNER JOIN deleted ON deleted.DOC_REC_ID = A.DOC_REC_ID
+
+	INSERT INTO impexp.DOCS_OUT_NBG
+	SELECT * FROM inserted
+
+	INSERT INTO impexp.DOCS_OUT_NBG_CHANGES(DOC_REC_ID, [USER_ID], DATE_TIME, CHANGE_TYPE, DESCRIP)
+	SELECT A.DOC_REC_ID, A.[USER_ID], A.DATE_TIME, A.CHANGE_TYPE, A.DESCRIP
+	FROM @tbl A
+		INNER JOIN inserted ON inserted.DOC_REC_ID = A.DOC_REC_ID
+	ORDER BY REC_ID
+END
+GO
+ALTER TABLE [impexp].[DOCS_OUT_NBG] ADD CONSTRAINT [PK_DOCS_OUT_NBG] PRIMARY KEY CLUSTERED  ([DOC_REC_ID]) ON [PRIMARY]
+GO
+ALTER TABLE [impexp].[DOCS_OUT_NBG] ADD CONSTRAINT [FK_DOCS_OUT_NBG_PORTIONS_OUT_NBG] FOREIGN KEY ([PORTION_DATE], [PORTION]) REFERENCES [impexp].[PORTIONS_OUT_NBG] ([PORTION_DATE], [PORTION])
+GO

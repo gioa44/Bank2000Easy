@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_CHANGE_TAXRATE]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@PREV_TAXRATE)[1]', 'money') AS PREV_TAXRATE,
+		OP_DATA.value('(row/@NEW_TAXRATE)[1]', 'money') AS NEW_TAXRATE
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_taxrate_change()
+GO

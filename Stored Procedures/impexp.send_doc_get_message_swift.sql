@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [impexp].[send_doc_get_message_swift]
+	@doc_rec_id int
+AS
+SET NOCOUNT ON
+
+SELECT SWIFT_TEXT, EXPORT_TIME
+FROM impexp.DOCS_OUT_SWIFT
+WHERE DOC_REC_ID = @doc_rec_id
+GO

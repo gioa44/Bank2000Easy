@@ -1,0 +1,22 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE  PROCEDURE [dbo].[ON_USER_BEFORE_CLOSE_DAY]
+	@in_tran bit
+AS
+IF @in_tran <> 0 RETURN (0)
+
+DECLARE
+	@r int
+
+--IF dbo.bank_open_date() = '20120101'
+--	RETURN (1)
+
+
+	EXEC @r = dbo.CONV_INCOME_OUTCOME
+	IF @@ERROR <> 0 OR @r <> 0 RETURN (1)
+RETURN(0)
+
+GO

@@ -1,0 +1,36 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE FUNCTION [dbo].[sys_get_group_rights2_from_tasks] (@group_id int)
+RETURNS varbinary(32)
+AS
+BEGIN
+	DECLARE @ac varbinary(32)
+	DECLARE @a varbinary(32)
+
+	SET @ac = 0x00
+
+	DECLARE cc CURSOR LOCAL READ_ONLY
+	FOR 
+	SELECT BT.ACCESS_STRING_2
+	FROM dbo.BANK_TASKS BT
+		INNER JOIN dbo.GROUP_BANK_TASKS GBT ON GBT.TASK_ID = BT.TASK_ID
+	WHERE GBT.GROUP_ID = @group_id
+
+	OPEN cc
+	FETCH NEXT FROM cc INTO @a
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		SET @ac = dbo.binary_op (@ac, @a, '|')
+		
+		FETCH NEXT FROM cc INTO @a
+	END
+
+	CLOSE cc
+	DEALLOCATE cc
+
+	RETURN @ac
+END
+GO

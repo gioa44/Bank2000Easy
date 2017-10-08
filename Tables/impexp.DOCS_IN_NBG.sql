@@ -1,0 +1,120 @@
+CREATE TABLE [impexp].[DOCS_IN_NBG]
+(
+[PORTION_DATE] [smalldatetime] NOT NULL,
+[PORTION] [int] NOT NULL,
+[ROW_ID] [int] NOT NULL,
+[UID] [int] NOT NULL,
+[NDOC] [int] NULL,
+[DATE] [smalldatetime] NOT NULL,
+[NFA] [int] NOT NULL,
+[NLS] [varchar] (9) COLLATE Latin1_General_BIN NOT NULL,
+[SUM] [money] NOT NULL,
+[NFB] [int] NOT NULL,
+[NLSK] [varchar] (9) COLLATE Latin1_General_BIN NOT NULL,
+[GIK] [varchar] (11) COLLATE Latin1_General_BIN NULL,
+[NLS_AX] [varchar] (34) COLLATE Latin1_General_BIN NOT NULL,
+[MIK] [varchar] (11) COLLATE Latin1_General_BIN NULL,
+[NLSK_AX] [varchar] (34) COLLATE Latin1_General_BIN NOT NULL,
+[BANK_A] [char] (3) COLLATE Latin1_General_BIN NOT NULL,
+[BANK_B] [char] (3) COLLATE Latin1_General_BIN NOT NULL,
+[GB] [varchar] (50) COLLATE Latin1_General_BIN NOT NULL,
+[G_O] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[MB] [varchar] (50) COLLATE Latin1_General_BIN NOT NULL,
+[M_O] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[GD] [varchar] (200) COLLATE Latin1_General_BIN NOT NULL,
+[REC_DATE] [smalldatetime] NOT NULL,
+[SAXAZKOD] [varchar] (9) COLLATE Latin1_General_BIN NULL,
+[DAMINF] [varchar] (250) COLLATE Latin1_General_BIN NULL,
+[STATE] [int] NOT NULL,
+[IS_READY] [bit] NOT NULL CONSTRAINT [DF_DOCS_IN_NBG_IS_READY] DEFAULT ((0)),
+[ACCOUNT] [dbo].[TACCOUNT] NULL,
+[ACC_ID] [int] NULL,
+[OTHER_INFO] [varchar] (250) COLLATE Latin1_General_BIN NULL,
+[ERROR_REASON] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[DOC_DATE] [smalldatetime] NULL,
+[DOC_REC_ID] [int] NULL,
+[IS_AUTHORIZED] [bit] NOT NULL CONSTRAINT [DF_DOCS_IN_NBG_IS_AUTHORIZED] DEFAULT ((0)),
+[IS_MODIFIED] [bit] NOT NULL CONSTRAINT [DF_DOCS_IN_NBG_IS_MODIFIED] DEFAULT ((0)),
+[FINALYZE_DOC_REC_ID] [int] NULL
+) ON [PRIMARY]
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [impexp].[ON_DOCS_IN_NBG_UPDATE] ON [impexp].[DOCS_IN_NBG]
+INSTEAD OF INSERT,DELETE,UPDATE
+AS 
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE
+		@portion_date smalldatetime, 
+		@portion int,
+		@amount money,
+		@count int,
+		@processed_amount money,
+		@processed_count int
+
+
+	DECLARE cc CURSOR LOCAL FORWARD_ONLY
+	FOR
+
+	SELECT PORTION_DATE, PORTION, SUM(AMOUNT), SUM ([COUNT]), SUM(PROCESSED_AMOUNT), SUM (PROCESSED_COUNT)
+	FROM 
+		(	SELECT PORTION_DATE, PORTION, [SUM] AS AMOUNT, 1 AS [COUNT],
+				CASE WHEN STATE IN (4, 99) THEN [SUM] ELSE $0.0 END AS PROCESSED_AMOUNT,
+				CASE WHEN STATE IN (4, 99) THEN 1 ELSE 0 END AS PROCESSED_COUNT FROM inserted
+			UNION ALL
+			SELECT PORTION_DATE, PORTION, -[SUM] AS AMOUNT, -1 AS [COUNT],
+				CASE WHEN STATE IN (4, 99) THEN -[SUM] ELSE $0.0 END AS PROCESSED_AMOUNT,
+				CASE WHEN STATE IN (4, 99) THEN -1 ELSE 0 END AS PROCESSED_COUNT FROM deleted
+		) A
+	GROUP BY PORTION_DATE, PORTION
+	
+	OPEN cc
+	FETCH NEXT FROM cc INTO @portion_date, @portion, @amount, @count, @processed_amount, @processed_count
+	
+	WHILE @@FETCH_STATUS = 0 
+	BEGIN
+--		IF @portion_date < dbo.bank_open_date()
+--		BEGIN
+--			RAISERROR ('ÞÅÄËÉ ÈÀÒÉÙÉÈ ÐÏÒÝÉÀÓÈÀÍ ÌÏØÌÄÃÄÁÀ ÀÒ ÛÄÉÞËÄÁÀ',16,1)
+--			ROLLBACK
+--			RETURN
+--		END
+
+		IF NOT EXISTS(SELECT * FROM impexp.PORTIONS_IN_NBG WHERE PORTION_DATE = @portion_date AND PORTION = @portion)
+		BEGIN
+			INSERT INTO impexp.PORTIONS_IN_NBG (PORTION_DATE, PORTION, STATE, AMOUNT, RECV_TIME)
+			VALUES (@portion_date, @portion, 1, $0.00, getdate())
+
+			IF @@ERROR <> 0 BEGIN ROLLBACK RETURN END
+		END
+
+		UPDATE impexp.PORTIONS_IN_NBG
+		SET AMOUNT = AMOUNT + @amount, 
+			[COUNT] = [COUNT] + @count,
+			PROCESSED_AMOUNT = PROCESSED_AMOUNT + @processed_amount, 
+			PROCESSED_COUNT = PROCESSED_COUNT + @processed_count,
+			STATE = CASE WHEN PROCESSED_COUNT + @processed_count > 0 AND PROCESSED_COUNT + @processed_count = [COUNT] + @count THEN 4 ELSE 2 END,
+			FINISH_TIME = CASE WHEN PROCESSED_COUNT + @processed_count > 0 AND PROCESSED_COUNT + @processed_count = [COUNT] + @count THEN GETDATE() ELSE FINISH_TIME END
+		WHERE PORTION_DATE = @portion_date AND PORTION = @portion
+
+		FETCH NEXT FROM cc INTO @portion_date, @portion, @amount, @count, @processed_amount, @processed_count
+	END
+
+	DELETE A
+	FROM impexp.DOCS_IN_NBG A
+		INNER JOIN deleted ON deleted.PORTION_DATE = A.PORTION_DATE AND deleted.PORTION = A.PORTION AND deleted.ROW_ID = A.ROW_ID
+
+	INSERT INTO impexp.DOCS_IN_NBG
+	SELECT * FROM inserted
+END
+GO
+ALTER TABLE [impexp].[DOCS_IN_NBG] ADD CONSTRAINT [PK_DOCS_IN_NBG] PRIMARY KEY CLUSTERED  ([PORTION_DATE], [PORTION], [ROW_ID]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_DOCS_IN_NBG_DOC_REC_ID] ON [impexp].[DOCS_IN_NBG] ([DOC_REC_ID]) ON [PRIMARY]
+GO
+ALTER TABLE [impexp].[DOCS_IN_NBG] ADD CONSTRAINT [FK_DOCS_IN_NBG_PORTIONS_IN_NBG] FOREIGN KEY ([PORTION_DATE], [PORTION]) REFERENCES [impexp].[PORTIONS_IN_NBG] ([PORTION_DATE], [PORTION])
+GO

@@ -1,0 +1,16 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[ON_USER_AFTER_LOAN_SP_GET_ACCOUNT]
+	@acc_id int,
+	@account TACCOUNT,
+	@type_id int,
+	@loan_id int,
+	@iso TISO,
+	@user_id int
+AS
+SET NOCOUNT ON;
+RETURN 0
+GO

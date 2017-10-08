@@ -1,0 +1,17 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE FUNCTION [dbo].[payments_get_acc](@rec_id int)
+RETURNS TINTACCOUNT
+AS
+BEGIN
+	DECLARE 
+		@sender_acc TINTACCOUNT
+
+	SELECT @sender_acc = DEBIT FROM dbo.DOCS
+	WHERE REC_ID = @rec_id
+
+	RETURN @sender_acc
+END
+GO

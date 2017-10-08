@@ -1,0 +1,17 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_CHANGE_FUNCTION_ADVANCE]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@ARCHIVE_DEPOSIT)[1]', 'bit') AS ARCHIVE_DEPOSIT,
+		OP_DATA.value('(row/@FUNCTION_ID)[1]', 'int') AS FUNCTION_ID,	
+		OP_DATA.value('(row/@ACCRUE_DEPOSIT)[1]', 'bit') AS ACCRUE_DEPOSIT,
+		OP_DATA.value('(row/@PREV_FORMULA)[1]', 'varchar(512)') AS PREV_FORMULA,
+		OP_DATA.value('(row/@NEW_FORMULA)[1]', 'varchar(512)') AS NEW_FORMULA
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = 116 /*dbo.depo_fn_const_op_function_advance()*/
+GO

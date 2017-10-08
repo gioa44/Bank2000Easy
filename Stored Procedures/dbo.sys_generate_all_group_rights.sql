@@ -1,0 +1,29 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+CREATE PROCEDURE [dbo].[sys_generate_all_group_rights]
+AS
+
+DECLARE @group_id int
+
+DECLARE cc CURSOR LOCAL READ_ONLY
+FOR 
+SELECT GROUP_ID
+FROM dbo.GROUPS
+
+OPEN cc
+FETCH NEXT FROM cc INTO @group_id 
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	EXEC dbo.sys_generate_group_rights @group_id 
+	
+	FETCH NEXT FROM cc INTO @group_id 
+END
+
+CLOSE cc
+DEALLOCATE cc
+GO

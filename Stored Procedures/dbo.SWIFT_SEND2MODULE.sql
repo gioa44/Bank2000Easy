@@ -1,0 +1,37 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[SWIFT_SEND2MODULE]
+  @dt smalldatetime = NULL,
+  @old_plats bit = 0
+AS
+
+SET NOCOUNT ON
+
+DECLARE @branch_id int
+EXEC dbo.GET_SETTING_INT 'HEAD_BRANCH_DEPT_NO', @branch_id OUTPUT
+
+DECLARE
+    @fin_account2 TACCOUNT,
+    @fin_conv_account TACCOUNT,
+    @our_bank_code_int varchar(100)
+
+EXEC dbo.GET_SETTING_ACC 'SWIFT_FIN_ACC', @fin_account2 OUTPUT
+EXEC dbo.GET_SETTING_ACC 'SWIFT_FIN_CONV_ACC', @fin_conv_account OUTPUT
+
+SELECT @our_bank_code_int = SUBSTRING(BIC, 1, 8)
+FROM dbo.DEPTS (NOLOCK)
+WHERE DEPT_NO = @branch_id
+
+
+SELECT A.*
+FROM
+  dbo.DOCS_VALPLAT A (NOLOCK) LEFT OUTER JOIN
+  dbo.SWIFT_DOCS_IN D (NOLOCK) ON A.REC_ID=D.REC_ID LEFT OUTER JOIN
+  dbo.VPC_PRINTED VPC (NOLOCK) ON A.REC_ID=VPC.REC_ID AND (ISNULL(APPROVED, 0)>0)
+WHERE 
+  (D.REC_ID IS NULL) AND (VPC .REC_ID IS NULL) AND (A.REC_STATE IN (20,22)) AND (A.DEBIT NOT IN (@fin_account2, @fin_conv_account)) AND
+  (CHARINDEX(@our_bank_code_int, A.RECEIVER_BANK_CODE) = 0) AND 
+  ((A.DOC_DATE=@dt) OR ((@old_plats=1) AND (A.DOC_DATE<@dt)))
+GO

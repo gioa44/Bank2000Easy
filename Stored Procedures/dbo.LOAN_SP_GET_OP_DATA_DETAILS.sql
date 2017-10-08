@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[LOAN_SP_GET_OP_DATA_DETAILS]
+	@op_id int,
+	@op_type int
+AS
+	IF @op_type = dbo.loan_const_op_payment()
+		SELECT * FROM dbo.LOAN_VW_LOAN_OP_PAYMENT_DETAILS WHERE OP_ID = @op_id
+GO

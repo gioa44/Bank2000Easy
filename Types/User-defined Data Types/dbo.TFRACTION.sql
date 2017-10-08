@@ -1,0 +1,2 @@
+CREATE TYPE [dbo].[TFRACTION] FROM decimal (16, 15) NULL
+GO

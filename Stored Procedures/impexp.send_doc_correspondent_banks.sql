@@ -1,0 +1,43 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [impexp].[send_doc_correspondent_banks]
+	@doc_rec_id int,
+	@filter_data bit = 0
+AS
+
+SET NOCOUNT ON
+
+IF @filter_data = 0
+BEGIN
+	SELECT *
+	FROM dbo.CORRESPONDENT_BANKS (NOLOCK)
+
+	RETURN 0
+END
+
+
+
+DECLARE
+	@iso TISO
+
+SELECT @iso = ISO
+FROM impexp.DOCS_OUT_SWIFT (NOLOCK)
+WHERE DOC_REC_ID = @doc_rec_id
+
+--IF @iso IN ('USD', 'EUR')
+--BEGIN
+--	SELECT *
+--	FROM dbo.CORRESPONDENT_BANKS (NOLOCK)
+--	WHERE ISO = @iso
+--
+--	RETURN 0 
+--END
+
+SELECT *
+FROM dbo.CORRESPONDENT_BANKS (NOLOCK)
+
+RETURN 0
+GO

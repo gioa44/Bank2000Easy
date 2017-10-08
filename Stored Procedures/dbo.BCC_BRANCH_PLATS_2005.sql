@@ -1,0 +1,23 @@
+SET QUOTED_IDENTIFIER OFF
+GO
+SET ANSI_NULLS ON
+GO
+
+
+CREATE PROCEDURE [dbo].[BCC_BRANCH_PLATS_2005]
+  @dept_no int
+AS
+
+DECLARE
+  @corr_acc_na TACCOUNT,
+  @corr_acc_va TACCOUNT
+
+SELECT @corr_acc_na = CORR_ACC_NA, @corr_acc_va = CORR_ACC_VA
+FROM dbo.BANKS B INNER JOIN dbo.DEPTS D ON B.CODE9 = D.CODE9
+WHERE D.DEPT_NO=@dept_no
+
+SELECT * 
+FROM dbo.DOCS_PLAT
+WHERE (REC_STATE=12) /* send ready */ AND
+      ((ISO='GEL' AND CREDIT=@corr_acc_na) OR (ISO<>'GEL' AND CREDIT=@corr_acc_va))
+GO

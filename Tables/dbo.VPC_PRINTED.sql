@@ -1,0 +1,7 @@
+CREATE TABLE [dbo].[VPC_PRINTED]
+(
+[REC_ID] [int] NOT NULL,
+[APPROVED] [bit] NOT NULL,
+[ACTION_DATETIME] [smalldatetime] NOT NULL
+) ON [PRIMARY]
+GO

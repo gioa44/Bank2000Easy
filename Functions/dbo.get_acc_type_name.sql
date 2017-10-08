@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE FUNCTION [dbo].[get_acc_type_name] (@acc_type int, @acc_subtype int, @lat bit = 0)
+RETURNS varchar(50)
+AS
+BEGIN
+	DECLARE @name varchar(50)
+
+	SELECT @name = CASE WHEN @lat = 0 THEN AT.DESCRIP + ' ' + ISNULL(AST.DESCRIP,'') ELSE AT.DESCRIP_LAT + ' ' + ISNULL(AST.DESCRIP_LAT,'') END
+	FROM dbo.ACC_TYPES AT (NOLOCK) 
+		LEFT JOIN dbo.ACC_SUBTYPES AST (NOLOCK) ON AST.ACC_TYPE = AT.ACC_TYPE AND AST.ACC_SUBTYPE = @acc_subtype
+	WHERE AT.ACC_TYPE = @acc_type
+
+	RETURN @name
+END
+GO

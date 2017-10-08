@@ -1,0 +1,28 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+
+
+
+CREATE PROCEDURE [dbo].[GET_OPEN_BANK_DATE]
+  @dt smalldatetime OUTPUT
+AS
+
+SET NOCOUNT ON
+
+SET @dt = (SELECT VALS FROM INI_DT WHERE IDS = 'OPEN_BANK_DATE')
+
+IF @dt IS NULL
+BEGIN
+  RAISERROR('ÁÀÍÊÉÓ ÙÉÀ ÃÙÉÓ ÈÀÒÉÙÉ ÀÒ ÀÒÉÓ ÝÍÏÁÉËÉ',16,1)
+  RETURN (1)
+END
+RETURN (0)
+
+
+
+
+GO

@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[ON_USER_SWIFT_SEND2MODULE]
+	@handled bit OUTPUT,
+	@dt smalldatetime = NULL,
+	@old_plats bit = 0
+AS
+	SET NOCOUNT ON
+	SET @handled = 0
+
+	RETURN (0)
+GO

@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[acc_accounts_percent_profit_val] AS
+
+SELECT * FROM dbo.ACCOUNTS
+
+WHERE IS_OFFBALANCE = 0				-- Balance account
+	AND REC_STATE IN (1, 4, 8)		-- Open, Only Credit
+	AND BAL_ACC_ALT BETWEEN 6000 AND 7999.99
+GO

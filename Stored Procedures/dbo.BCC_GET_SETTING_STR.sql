@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[BCC_GET_SETTING_STR]
+  @param_name varchar(20),
+  @val varchar(255) OUTPUT
+AS
+
+SET NOCOUNT ON
+
+SELECT @val = VALS 
+FROM dbo.INI_STR (NOLOCK)
+WHERE IDS = @param_name
+IF @@ROWCOUNT=0
+  SET @val = ''
+GO

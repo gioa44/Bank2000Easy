@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_ACC_DATA_ACCUMULATE]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_ACC_DATA.value('(row/@ACC_ARC_REC_ID)[1]', 'int') AS ACC_ARC_REC_ID
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_accumulate()
+GO

@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[show_acc_accruals] (@acc_id int)
+RETURNS TABLE AS
+
+	RETURN
+		SELECT * 
+		FROM dbo.OPS_FULL (NOLOCK)
+		WHERE DOC_TYPE = 30 and ACCOUNT_EXTRA = @acc_id AND	(DEBIT_ID = @acc_id OR CREDIT_ID = @acc_id)
+GO

@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [impexp].[swift_get_corr_bank]
+	@iso TISO,
+	@receiver_bank_code varchar(11)
+AS
+	SELECT C.*
+	FROM dbo.CORRESPONDENT_BANKS (NOLOCK) C
+		INNER JOIN impexp.SWIFT_CORR_BANKS (NOLOCK) B ON C.BIC = B.BIC AND C.ISO = B.ISO_1
+	WHERE B.ISO_2 = @iso AND B.RECEIVER_BANK_CODE = @receiver_bank_code
+GO

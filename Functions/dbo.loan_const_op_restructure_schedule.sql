@@ -1,0 +1,11 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[loan_const_op_restructure_schedule]()
+RETURNS int
+BEGIN
+	RETURN (112)
+END
+GO

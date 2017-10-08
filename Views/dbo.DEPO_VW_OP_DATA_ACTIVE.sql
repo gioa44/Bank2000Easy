@@ -1,0 +1,23 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_ACTIVE]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@CLIENT_TYPE)[1]', 'tinyint') AS CLIENT_TYPE,
+		OP_DATA.value('(row/@DEPO_FILL_ACC_ID)[1]', 'int') AS DEPO_FILL_ACC_ID,
+		OP_DATA.value('(row/@DEPO_REALIZE_ACC_ID)[1]', 'int') AS DEPO_REALIZE_ACC_ID,
+		OP_DATA.value('(row/@INTEREST_REALIZE_ACC_ID)[1]', 'int') AS INTEREST_REALIZE_ACC_ID,
+		OP_DATA.value('(row/@INTEREST_REALIZE_ADV)[1]', 'bit') AS INTEREST_REALIZE_ADV,
+		OP_DATA.value('(row/@INTEREST_REALIZE_ADV_AMOUNT)[1]', 'money') AS INTEREST_REALIZE_ADV_AMOUNT,
+		OP_DATA.value('(row/@INTEREST_REALIZE_ADV_ACC_ID)[1]', 'int') AS INTEREST_REALIZE_ADV_ACC_ID,
+		OP_DATA.value('(row/@ACC_MIN_AMOUNT)[1]', 'money') AS ACC_MIN_AMOUNT,
+		OP_DATA.value('(row/@END_DATE)[1]', 'smalldatetime') AS END_DATE,
+		OP_DATA.value('(row/@DEPO_PREV_STATE)[1]', 'tinyint') AS DEPO_PREV_STATE
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_active()
+GO

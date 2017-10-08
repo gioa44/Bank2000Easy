@@ -1,0 +1,4 @@
+CREATE TYPE [dbo].[TBAL_ACC] FROM decimal (6, 2) NOT NULL
+GO
+GRANT REFERENCES ON TYPE:: [dbo].[TBAL_ACC] TO [public]
+GO

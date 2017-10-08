@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_MARK2DEFAULT]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@DEPOSIT_DEFAULT)[1]', 'bit') AS DEPOSIT_DEFAULT,
+		OP_DATA.value('(row/@REMARK)[1]', 'varchar(255)') AS REMARK
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_mark2default()
+GO

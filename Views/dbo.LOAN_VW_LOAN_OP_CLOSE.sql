@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+
+CREATE VIEW [dbo].[LOAN_VW_LOAN_OP_CLOSE]
+AS
+SELECT
+		OP_ID,
+		LOAN_ID,
+		OP_DATA.value('(row/@STATE)[1]', 'tinyint') AS [STATE],
+		OP_DATA.value('(row/@CLOSE_COLLAT)[1]', 'bit') AS CLOSE_COLLAT,
+		OP_DATA.value('(row/@COLLATERAL_LIST)[1]', 'varchar(1000)') AS COLLATERAL_LIST
+	FROM dbo.LOAN_OPS
+	WHERE OP_TYPE = dbo.loan_const_op_close()
+GO

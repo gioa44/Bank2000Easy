@@ -1,0 +1,4 @@
+CREATE TYPE [dbo].[TOPCODE] FROM char (5) NULL
+GO
+GRANT REFERENCES ON TYPE:: [dbo].[TOPCODE] TO [public]
+GO

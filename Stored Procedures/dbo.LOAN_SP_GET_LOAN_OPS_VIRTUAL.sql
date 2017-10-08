@@ -1,0 +1,42 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[LOAN_SP_GET_LOAN_OPS_VIRTUAL]
+  @loan_id int,
+  @eng_version bit = 0 
+AS
+	DECLARE
+		@last_op_id int,
+		@loan_state tinyint,
+		@loan_authorize_level tinyint
+	
+	SELECT @loan_state = STATE, @loan_authorize_level = AUTHORIZE_LEVEL
+	FROM dbo.LOANS (NOLOCK)
+	WHERE LOAN_ID = @loan_id
+
+	SELECT @last_op_id = MAX(OP_ID)
+	FROM #tbl_ops
+	WHERE LOAN_ID = @loan_id OR LOAN_ID = -1
+
+
+                    
+	SELECT O.OP_ID, O.LOAN_ID, O.OP_DATE, O.OP_TYPE,
+		CASE WHEN @eng_version = 0 THEN T.DESCRIP ELSE T.DESCRIP_LAT END AS OP_DESCRIP,
+		@last_op_id AS LAST_OP_ID, O.AMOUNT, O.OP_STATE, T.SELF_EXEC, 
+		O.DOC_REC_ID, O.OP_NOTE,
+		O.UPDATE_DATA, O.UPDATE_SCHEDULE, O.OWNER, O.AUTH_OWNER,
+		RTRIM(U.USER_NAME) + '@' + DP_U.ALIAS AS U_OWNER_NAME,
+		CASE WHEN US.USER_NAME IS NULL THEN US.USER_NAME ELSE RTRIM(US.USER_NAME) + '@' + DP_US.ALIAS END AS US_AUTH_OWNER_NAME
+ 	FROM #tbl_ops O
+		INNER JOIN dbo.LOAN_OP_TYPES T (NOLOCK) ON T.TYPE_ID = O.OP_TYPE
+        INNER JOIN dbo.USERS U (NOLOCK) ON O.OWNER = U.USER_ID
+		INNER JOIN dbo.DEPTS DP_U (NOLOCK) ON DP_U.DEPT_NO = U.DEPT_NO
+        LEFT JOIN dbo.USERS US (NOLOCK) ON O.AUTH_OWNER = US.USER_ID
+		LEFT JOIN dbo.DEPTS DP_US (NOLOCK) ON DP_US.DEPT_NO = US.DEPT_NO
+	WHERE ((@loan_authorize_level >= @loan_state) OR (@loan_state > 20)) AND ((O.LOAN_ID = @loan_id) OR (O.LOAN_ID = -1))
+	ORDER BY O.OP_ID
+	
+	RETURN (0)
+GO

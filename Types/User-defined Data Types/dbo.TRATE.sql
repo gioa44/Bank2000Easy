@@ -1,0 +1,4 @@
+CREATE TYPE [dbo].[TRATE] FROM decimal (32, 12) NOT NULL
+GO
+GRANT REFERENCES ON TYPE:: [dbo].[TRATE] TO [public]
+GO

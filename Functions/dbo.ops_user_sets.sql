@@ -1,0 +1,16 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+CREATE FUNCTION [dbo].[ops_user_sets] (@user_id int, @right_name varchar(100) = 'ÍÀáÅÀ')
+RETURNS TABLE
+AS
+RETURN
+	SELECT DISTINCT SR.SET_ID
+	FROM dbo.OPS_SET_RIGHTS SR
+		INNER JOIN dbo.GROUPS G ON G.GROUP_ID = SR.GROUP_ID
+		INNER JOIN dbo.USERS U ON U.GROUP_ID = G.GROUP_ID
+	WHERE U.[USER_ID] = @user_id AND (@right_name IS NULL OR SR.RIGHT_NAME = @right_name)
+GO

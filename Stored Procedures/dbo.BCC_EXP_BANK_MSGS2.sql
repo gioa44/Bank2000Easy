@@ -1,0 +1,20 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+CREATE PROCEDURE [dbo].[BCC_EXP_BANK_MSGS2]
+  @bc_login_id int,
+  @rec_id int OUTPUT,
+  @step tinyint
+AS
+
+SET NOCOUNT ON
+
+IF @step = 0
+  SELECT @rec_id = MAX(REC_ID) FROM dbo.BC_BANK_MSGS2 (NOLOCK)
+ELSE
+  SELECT * FROM dbo.BC_BANK_MSGS2 (NOLOCK)
+  WHERE (REC_ID > @rec_id) AND (BC_LOGIN_ID IS NULL OR BC_LOGIN_ID = @bc_login_id)
+GO

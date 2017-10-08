@@ -1,0 +1,27 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[LOAN_VW_LOAN_OP_INDIVIDUAL_RISKS]
+AS
+	SELECT
+		OP_ID,
+		LOAN_ID,
+		ISNULL(OP_DATA.value('(row/@OLD_RISK_TYPE)[1]', 'int'), 0) AS OLD_RISK_TYPE,
+		ISNULL(OP_DATA.value('(row/@NEW_RISK_TYPE)[1]', 'int'), 0) AS NEW_RISK_TYPE,
+
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_OLD_1)[1]', 'money'), $0.00) AS RISK_PERC_RATE_OLD_1,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_OLD_2)[1]', 'money'), $0.00) AS RISK_PERC_RATE_OLD_2,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_OLD_3)[1]', 'money'), $0.00) AS RISK_PERC_RATE_OLD_3,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_OLD_4)[1]', 'money'), $0.00) AS RISK_PERC_RATE_OLD_4,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_OLD_5)[1]', 'money'), $0.00) AS RISK_PERC_RATE_OLD_5,
+
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_NEW_1)[1]', 'money'), $0.00) AS RISK_PERC_RATE_NEW_1,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_NEW_2)[1]', 'money'), $0.00) AS RISK_PERC_RATE_NEW_2,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_NEW_3)[1]', 'money'), $0.00) AS RISK_PERC_RATE_NEW_3,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_NEW_4)[1]', 'money'), $0.00) AS RISK_PERC_RATE_NEW_4,
+		ISNULL(OP_DATA.value('(row/@RISK_PERC_RATE_NEW_5)[1]', 'money'), $0.00) AS RISK_PERC_RATE_NEW_5
+	FROM dbo.LOAN_OPS
+	WHERE OP_TYPE = dbo.loan_const_op_individual_risks()
+GO

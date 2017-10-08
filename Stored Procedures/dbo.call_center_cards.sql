@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[call_center_cards] (@client_no int)
+AS
+	-- TODO: Write your code here
+
+	SELECT convert(varchar(50), '122 589 766 22') AS CARD_ID, 
+			'VISA CLASSIC' AS CARD_TYPE,
+			'01/2006' AS VALID_UNTIL,
+            $100000.00 AS BALANCE,
+			$100000.00 AS BALANCE_AVAILABLE,
+			'GEL' AS ISO
+GO

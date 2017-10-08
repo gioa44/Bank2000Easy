@@ -1,0 +1,19 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_REVISION]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@ARCHIVE_DEPOSIT)[1]', 'bit') AS ARCHIVE_DEPOSIT,		
+		OP_DATA.value('(row/@OLD_INTRATE)[1]', 'money') AS OLD_INTRATE,
+		OP_DATA.value('(row/@OLD_SPEND_AMOUNT_INTRATE)[1]', 'money') AS OLD_SPEND_AMOUNT_INTRATE,
+		OP_DATA.value('(row/@OLD_FORMULA)[1]', 'varchar(255)') AS OLD_FORMULA,		
+		OP_DATA.value('(row/@NEW_INTRATE)[1]', 'money') AS NEW_INTRATE,
+		OP_DATA.value('(row/@NEW_SPEND_AMOUNT_INTRATE)[1]', 'money') AS NEW_SPEND_AMOUNT_INTRATE
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_revision()
+GO

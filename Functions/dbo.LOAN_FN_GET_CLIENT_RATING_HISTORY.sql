@@ -1,0 +1,31 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+CREATE FUNCTION [dbo].[LOAN_FN_GET_CLIENT_RATING_HISTORY](@client_no int, @max_date smalldatetime)
+RETURNS varchar(3)
+BEGIN
+
+DECLARE
+	@raiting varchar(3)
+
+	SET @raiting = NULL
+
+	SELECT TOP 1 @raiting = RAITING 
+	FROM dbo.CLIENT_EXTENSIONS_RATINGS_HISTORY
+	WHERE CLIENT_NO = @client_no AND DATE <= @max_date
+	ORDER BY DATE DESC
+
+	IF @raiting IS NULL
+	BEGIN
+		SELECT @raiting = RAITING
+		FROM dbo.CLIENT_EXTENSIONS
+		WHERE CLIENT_NO = @client_no
+	END
+
+	RETURN @raiting
+END
+
+GO

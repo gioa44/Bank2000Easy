@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[call_center_show_clients_by_ccard] (@ccard_id varchar(20))
+RETURNS @tbl TABLE (CLIENT_NO int NOT NULL PRIMARY KEY CLUSTERED)
+AS
+BEGIN
+	RETURN
+END
+GO

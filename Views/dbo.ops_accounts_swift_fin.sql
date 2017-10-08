@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[ops_accounts_swift_fin] AS
+SELECT * FROM dbo.ACCOUNTS
+WHERE IS_OFFBALANCE = 0			-- Balance account
+	AND REC_STATE IN (1, 32)	-- Open, Only Credit, Only Budjet, Control
+	AND BAL_ACC_ALT >= 1712.00 AND BAL_ACC_ALT <= 1712.99
+	AND ISO <> 'GEL'
+GO

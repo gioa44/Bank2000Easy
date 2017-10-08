@@ -1,0 +1,62 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[RWBC_ADD_WEB_CLIENT]
+  @rec_id int,
+  @client_no int,
+  @user_id int,
+  @sys_login varchar(12)
+AS
+
+SET NOCOUNT ON
+
+  IF EXISTS (SELECT * FROM dbo.BC_CLIENT_CLIENTS WHERE CLIENT_NO = @client_no)
+  BEGIN
+    RAISERROR('ÊËÉÄÍÔÉ ÖÊÅÄ ÃÀÒÄÂÉÓÔÒÉÒÄÁÖËÉÀ.',16,1)
+    RETURN 1
+  END
+
+  IF EXISTS(SELECT * FROM BC_LOGINS (NOLOCK) WHERE BC_LOGIN=@sys_login)
+  BEGIN 
+    RAISERROR ('ÌÏÌáÌÀÒÄÁËÉÓ ÓÀáÄËÉ ÖÊÅÄ ÂÀÌÏÚÄÍÄÁÖËÉÀ',16,1) 
+    RETURN 1 
+  END
+    
+  DECLARE @bc_id int
+  DECLARE @client_name varchar(100)
+  DECLARE @r int, @e int
+  DECLARE @reg_date smalldatetime
+  SELECT @reg_date=REG_DATE FROM BC_CLIENTS (NOLOCK) WHERE BC_CLIENT_ID=@rec_id
+  SELECT @client_name=DESCRIP FROM CLIENTS (NOLOCK) WHERE CLIENT_NO=@rec_id
+  SELECT @r=@@ROWCOUNT,@e=@@ERROR
+  IF @e<>0 OR @r<> 1 BEGIN RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN 1 END
+
+
+  INSERT INTO dbo.BC_CLIENT_CLIENTS(BC_CLIENT_ID,CLIENT_NO) VALUES(@rec_id, @client_no)
+  SELECT @r=@@ROWCOUNT,@e=@@ERROR
+  IF @@ERROR<>0 BEGIN RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN 1 END
+  INSERT INTO BC_LOGINS
+    (BC_CLIENT_ID, BC_LOGIN, FLAGS, FLAGS2, FLAGS3, DEADLINE, DESCRIP, PSW_MUST_BE_CHANGED, DEADLINE2, REG_DATE, LOGIN_COUNTER)
+  VALUES
+    (@rec_id, @sys_login, 66633698, 458783, 0, '20000101 17:00:00.000', @client_name, 1, '20000101 16:00:00.000', @reg_date, 0)
+  IF @@ERROR<>0 BEGIN  RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN 1 END
+  SET @bc_id=SCOPE_IDENTITY()
+
+  UPDATE dbo.ACCOUNTS SET FLAGS=FLAGS|2 WHERE CLIENT_NO=@client_no
+  SELECT @r=@@ROWCOUNT,@e=@@ERROR
+  IF @@ERROR<>0 BEGIN RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN  1 END
+  IF @r<>0
+  BEGIN 
+    INSERT INTO ACC_CHANGES(ACCOUNT,ISO,[USER_ID],DESCRIP)
+    SELECT ACCOUNT, ISO, @user_id, 'ÀÍÂÀÒÉÛÉÓ ÛÄÝÅËÀ: FLAGS'
+    FROM dbo.ACCOUNTS WHERE CLIENT_NO=@client_no
+    IF @@ERROR<>0 BEGIN RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN  1 END
+    INSERT INTO BC_LOGIN_ACC(ACCOUNT, ISO, FLAGS, BC_LOGIN_ID)
+    SELECT ACCOUNT, ISO, 35127358, @bc_id FROM dbo.ACCOUNTS WHERE CLIENT_NO=@client_no
+    IF @@ERROR<>0 BEGIN RAISERROR ('ÛÄÝÃÏÌÀ.',16,1) RETURN 1 END
+  END
+
+  RETURN (0)
+GO

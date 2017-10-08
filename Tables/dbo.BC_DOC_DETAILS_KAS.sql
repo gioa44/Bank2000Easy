@@ -1,0 +1,22 @@
+CREATE TABLE [dbo].[BC_DOC_DETAILS_KAS]
+(
+[REC_ID] [int] NOT NULL,
+[CLIENT_NAME] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[DOCUMENT] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[CASHIER] [int] NULL,
+[CHK_SERIE] [char] (4) COLLATE Latin1_General_BIN NULL,
+[FIRST_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[LAST_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[FATHERS_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[BIRTH_DATE] [smalldatetime] NULL,
+[BIRTH_PLACE] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[ADDRESS_JUR] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[ADDRESS_FACT] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[COUNTRY] [char] (2) COLLATE Latin1_General_BIN NULL,
+[PASSPORT_TYPE_ID] [tinyint] NULL,
+[PASSPORT] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[PERSONAL_ID] [varchar] (20) COLLATE Latin1_General_BIN NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[BC_DOC_DETAILS_KAS] ADD CONSTRAINT [PK_BC_DOC_DETAILS_KAS] PRIMARY KEY CLUSTERED  ([REC_ID]) ON [PRIMARY]
+GO

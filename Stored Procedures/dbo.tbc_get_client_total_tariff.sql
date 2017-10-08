@@ -1,0 +1,10 @@
+SET QUOTED_IDENTIFIER OFF
+GO
+SET ANSI_NULLS OFF
+GO
+
+CREATE PROCEDURE [dbo].[tbc_get_client_total_tariff] (@client_no int)
+AS
+
+SELECT $0.00 AS TOTAL_TARRIF
+GO

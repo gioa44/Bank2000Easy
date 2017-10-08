@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[ops_is_cash_op_code] (@op_code varchar(5))
+RETURNS bit
+AS
+BEGIN
+	RETURN CASE WHEN @op_code IN ('CASH', 'SLRY') THEN 1 ELSE 0 END
+END
+GO

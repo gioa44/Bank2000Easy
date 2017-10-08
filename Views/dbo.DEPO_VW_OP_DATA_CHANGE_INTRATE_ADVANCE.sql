@@ -1,0 +1,18 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE VIEW [dbo].[DEPO_VW_OP_DATA_CHANGE_INTRATE_ADVANCE]
+AS
+	SELECT
+		OP_ID,
+		DEPO_ID,
+		OP_DATA.value('(row/@ARCHIVE_DEPOSIT)[1]', 'bit') AS ARCHIVE_DEPOSIT,
+		OP_DATA.value('(row/@INTRATE_ADVANCE_SCHEMA)[1]', 'int') AS INTRATE_ADVANCE_SCHEMA,	
+		OP_DATA.value('(row/@ACCRUE_DEPOSIT)[1]', 'bit') AS ACCRUE_DEPOSIT,
+		OP_DATA.value('(row/@PREV_FORMULA)[1]', 'varchar(512)') AS PREV_FORMULA,
+		OP_DATA.value('(row/@NEW_FORMULA)[1]', 'varchar(512)') AS NEW_FORMULA
+	FROM dbo.DEPO_OP
+	WHERE OP_TYPE = dbo.depo_fn_const_op_intrate_advance()
+GO

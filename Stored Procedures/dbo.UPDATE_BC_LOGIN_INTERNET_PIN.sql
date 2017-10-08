@@ -1,0 +1,19 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+
+
+CREATE PROCEDURE [dbo].[UPDATE_BC_LOGIN_INTERNET_PIN] (@bc_login_id int, @pswhash char(32), @user_id int) AS
+
+SET NOCOUNT ON
+
+UPDATE dbo.BC_LOGINS
+SET INTERNET_PIN = @pswhash
+WHERE BC_LOGIN_ID = @bc_login_id
+
+INSERT INTO dbo.BC_LOGIN_PSW_CHANGES (BC_LOGIN_ID,[USER_ID],CHANGED_BY_WBC_USER)
+VALUES (@bc_login_id, @user_id, 0)
+
+GO

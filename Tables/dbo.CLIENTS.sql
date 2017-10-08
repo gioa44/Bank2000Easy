@@ -1,0 +1,183 @@
+CREATE TABLE [dbo].[CLIENTS]
+(
+[CLIENT_NO] [int] NOT NULL IDENTITY(1, 1),
+[BRANCH_ID] [int] NULL,
+[DEPT_NO] [int] NULL,
+[CLIENT_TYPE] [tinyint] NOT NULL CONSTRAINT [DF_CLIENTS_CLIENT_TYPE] DEFAULT ((1)),
+[CLIENT_SUBTYPE] [tinyint] NULL,
+[REC_STATE] [tinyint] NOT NULL CONSTRAINT [DF_CLIENTS_REC_STATE] DEFAULT ((1)),
+[COMPLETED] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_COMPLETED] DEFAULT ((1)),
+[RESPONSIBLE_USER_ID] [int] NULL,
+[CLIENT_TYPE_BANK] [tinyint] NOT NULL CONSTRAINT [DF_CLIENTS_CLIENT_TYPE_BANK] DEFAULT ((1)),
+[DESCRIP] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[DESCRIP_LAT] [varchar] (100) COLLATE Latin1_General_BIN NOT NULL,
+[CLIENT_REG_DATE] [smalldatetime] NULL,
+[IS_RESIDENT] [bit] NOT NULL,
+[IS_INSIDER] [bit] NOT NULL,
+[COUNTRY] [char] (2) COLLATE Latin1_General_BIN NULL,
+[FIRST_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[LAST_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[FIRST_NAME_LAT] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[LAST_NAME_LAT] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[FATHERS_NAME] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[FATHERS_NAME_LAT] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[MALE_FEMALE] [bit] NULL,
+[TAX_INSP_CITY] [varchar] (20) COLLATE Latin1_General_BIN NULL,
+[TAX_INSP_CODE] [varchar] (11) COLLATE Latin1_General_BIN NULL,
+[PASSPORT_TYPE_ID] [tinyint] NULL,
+[PASSPORT_COUNTRY] [char] (2) COLLATE Latin1_General_BIN NULL,
+[PASSPORT_ISSUE_DT] [smalldatetime] NULL,
+[PASSPORT_END_DATE] [smalldatetime] NULL,
+[PASSPORT] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[PASSPORT_REG_ORGAN] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[PERSONAL_ID] [varchar] (20) COLLATE Latin1_General_BIN NULL,
+[PASSPORT_NEEDED] [bit] NULL,
+[PHONE_PIN] [varchar] (10) COLLATE Latin1_General_BIN NULL,
+[COMMENT] [varchar] (200) COLLATE Latin1_General_BIN NULL,
+[RATE_POLITICS_ID] [int] NULL,
+[RATE_DIFF_TYPE] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_RATE_DIFF_TYPE] DEFAULT ((0)),
+[RATE_TARIFF_ALWAYS_IN_GEL] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_RATE_TARIFF_ALWAYS_IN_GEL] DEFAULT ((0)),
+[IS_BUDJET] AS (CONVERT([bit],case  when [CLIENT_TYPE]=(3) OR [CLIENT_TYPE]=(2) then (0) else (1) end,(0))),
+[IS_JURIDICAL] AS (CONVERT([bit],case  when [CLIENT_TYPE]=(1) then (0) else (1) end,(0))),
+[CITY] [varchar] (20) COLLATE Latin1_General_BIN NULL,
+[PHONE1] [varchar] (62) COLLATE Latin1_General_BIN NULL,
+[PHONE2] [varchar] (12) COLLATE Latin1_General_BIN NULL,
+[BIRTH_DATE] [smalldatetime] NULL,
+[BIRTH_PLACE] [varchar] (100) COLLATE Latin1_General_BIN NULL,
+[MARITAL_STATUS] [tinyint] NULL,
+[ORG_TYPE] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[REG_NUM] [varchar] (30) COLLATE Latin1_General_BIN NULL,
+[REG_DATE] [smalldatetime] NULL,
+[REG_ORGAN] [varchar] (50) COLLATE Latin1_General_BIN NULL,
+[SEGMENT] [tinyint] NULL,
+[CITY_LAT] [varchar] (20) COLLATE Latin1_General_BIN NULL,
+[IS_EMPLOYEE] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_IS_EMPLOYEE] DEFAULT ((0)),
+[IS_IN_BLACK_LIST] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_IS_IN_BLACK_LIST] DEFAULT ((0)),
+[IS_CONTROL] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_IS_CONTROL] DEFAULT ((0)),
+[LOAN_LIMIT_AMOUNT] [money] NULL,
+[LOAN_LIMIT_ISO] [dbo].[TISO] NULL,
+[CLIENT_SUBTYPE2] [int] NULL,
+[IS_AUTHORIZED] [bit] NOT NULL CONSTRAINT [DF_CLIENTS_IS_AUTHORIZED] DEFAULT ((0)),
+[SMART_CARD_NO] [varchar] (100) COLLATE Latin1_General_BIN NULL
+) ON [PRIMARY]
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE TRIGGER [dbo].[ON_CLIENTS_INS_TRIGGER] ON [dbo].[CLIENTS] 
+FOR INSERT, UPDATE
+AS
+
+IF @@ROWCOUNT <> 1
+	RETURN
+
+SET NOCOUNT ON;
+
+DECLARE 
+	@client_no int,
+	@passport varchar(50),
+	@is_jur bit,
+	@pers_id varchar(20),
+	@phone_pin varchar(10),
+	@passport_type_id tinyint,
+	@passport_co char(2)
+
+DECLARE
+	@old_passport varchar(50),
+	@old_is_jur bit,
+	@old_pers_id varchar(20),
+	@old_passport_type_id tinyint,
+	@old_passport_co char(2),
+	@old_phone_pin varchar(10)
+
+SELECT @client_no = CLIENT_NO, @is_jur = IS_JURIDICAL,
+       @passport = ISNULL(PASSPORT, ''), @pers_id = ISNULL(PERSONAL_ID, ''), 
+       @passport_type_id = ISNULL(PASSPORT_TYPE_ID,0), @passport_co = PASSPORT_COUNTRY,
+       @phone_pin = ISNULL(PHONE_PIN, '')
+FROM inserted
+
+SELECT @old_is_jur = IS_JURIDICAL,
+       @old_passport = ISNULL(PASSPORT, ''), @old_pers_id = ISNULL(PERSONAL_ID, ''), 
+       @old_passport_type_id = ISNULL(PASSPORT_TYPE_ID,0), @old_passport_co = PASSPORT_COUNTRY,
+       @old_phone_pin = ISNULL(PHONE_PIN, '')
+FROM deleted
+
+IF ISNULL(@is_jur, 0) <> ISNULL(@old_is_jur, 0) OR 
+	ISNULL(@passport_type_id, 0) <> ISNULL(@old_passport_type_id, 0) OR 
+	ISNULL(@passport, '') <> ISNULL(@old_passport, '') OR 
+	ISNULL(@pers_id, '') <> ISNULL(@old_pers_id, '') OR 
+	ISNULL(@passport_co, '') <> ISNULL(@old_passport_co, '')
+BEGIN
+	IF (@is_jur = 0) AND (@passport_type_id > 0) AND (@passport <> '') AND 
+	   EXISTS(SELECT * FROM dbo.CLIENTS (NOLOCK) WHERE (CLIENT_NO <> @client_no) AND 
+		(PASSPORT_TYPE_ID = @passport_type_id) AND (PASSPORT = @passport) AND (PASSPORT_COUNTRY = @passport_co))
+	BEGIN
+		RAISERROR ('×ÉÆÉÊÖÒÉ ÐÉÒÉ ÀÓÄÈÉ ÐÀÓÐÏÒÔÉÓ ÍÏÌÒÉÈ ÖÊÅÄ ÀÒÉÓ ÌÏÍÀÝÄÌÈÀ ÁÀÆÀÛÉ.',16,1)
+		ROLLBACK
+		RETURN
+	END
+
+	IF (@is_jur = 0) AND (@passport_type_id > 0) AND (@pers_id <> '') 
+	BEGIN
+		DECLARE @dup bit
+		SET @dup = 0
+		
+		IF (SELECT P.CHECK_DUP_PERSONAL_ID FROM dbo.PASSPORT_TYPES P(NOLOCK) WHERE P.PASSPORT_TYPE_ID = @passport_type_id) = 1
+		BEGIN
+			IF EXISTS(SELECT * FROM dbo.CLIENTS C(NOLOCK) 
+					INNER JOIN dbo.PASSPORT_TYPES P(NOLOCK) ON P.PASSPORT_TYPE_ID = C.PASSPORT_TYPE_ID
+				WHERE (C.CLIENT_NO <> @client_no) AND (P.CHECK_DUP_PERSONAL_ID = 1) AND
+					(C.PERSONAL_ID = @pers_id) AND (C.PASSPORT_COUNTRY = @passport_co))
+				SET @dup = 1
+		END
+		ELSE
+		BEGIN
+			IF EXISTS(SELECT * FROM dbo.CLIENTS C(NOLOCK) WHERE (C.CLIENT_NO <> @client_no) AND 
+				(C.PASSPORT_TYPE_ID = @passport_type_id) AND (C.PERSONAL_ID = @pers_id) AND (C.PASSPORT_COUNTRY = @passport_co))
+				SET @dup = 1
+		END
+		
+		IF @dup = 1
+		BEGIN
+			RAISERROR ('×ÉÆÉÊÖÒÉ ÐÉÒÉ ÀÓÄÈÉ ÐÉÒÀÃÉ ÍÏÌÒÉÈ ÖÊÅÄ ÀÒÉÓ ÌÏÍÀÝÄÌÈÀ ÁÀÆÀÛÉ.',16,1)
+			ROLLBACK
+			RETURN
+		END
+	END
+END
+
+IF (@phone_pin <> '') AND (@old_phone_pin <> @phone_pin) AND
+   EXISTS(SELECT * FROM dbo.CLIENTS (NOLOCK) WHERE (CLIENT_NO <> @client_no) AND (PHONE_PIN = @phone_pin)) 
+BEGIN
+	RAISERROR ('ÄÓ ÔÄËÄ×ÏÍÉÓ ÐÉÍÉ ÖÊÅÄ ÂÀÌÏÚÄÍÄÁÖËÉÀ.',16,1)
+	ROLLBACK
+	RETURN
+END
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [CK_CLIENTS_CLIENT_TYPE_BANK] CHECK (([CLIENT_TYPE_BANK]>=(0) AND [CLIENT_TYPE_BANK]<=(63)))
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [PK_CLIENTS] PRIMARY KEY CLUSTERED  ([CLIENT_NO]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_BRANCH_ID] ON [dbo].[CLIENTS] ([BRANCH_ID]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_DEPT_NO] ON [dbo].[CLIENTS] ([DEPT_NO]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_PASSPORT] ON [dbo].[CLIENTS] ([PASSPORT]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_PERSONAL_ID] ON [dbo].[CLIENTS] ([PERSONAL_ID]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_PHONE_PIN] ON [dbo].[CLIENTS] ([PHONE_PIN]) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CLIENTS_TAX_INSP_CODE] ON [dbo].[CLIENTS] ([TAX_INSP_CODE]) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [FK_CLIENTS_CLIENT_SUBTYPES2] FOREIGN KEY ([CLIENT_SUBTYPE2]) REFERENCES [dbo].[CLIENT_SUBTYPES2] ([CLIENT_SUBTYPE2]) ON DELETE SET NULL ON UPDATE CASCADE
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [FK_CLIENTS_DEPTS_BRANCH_ID] FOREIGN KEY ([BRANCH_ID]) REFERENCES [dbo].[DEPTS] ([DEPT_NO])
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [FK_CLIENTS_DEPTS_DEPT_NO] FOREIGN KEY ([DEPT_NO]) REFERENCES [dbo].[DEPTS] ([DEPT_NO])
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [FK_CLIENTS_RATE_POLITICS] FOREIGN KEY ([RATE_POLITICS_ID]) REFERENCES [dbo].[RATE_POLITICS] ([REC_ID])
+GO
+ALTER TABLE [dbo].[CLIENTS] ADD CONSTRAINT [FK_CLIENTS_VAL_CODES] FOREIGN KEY ([LOAN_LIMIT_ISO]) REFERENCES [dbo].[VAL_CODES] ([ISO])
+GO

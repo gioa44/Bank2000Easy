@@ -1,0 +1,60 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [dbo].[depo_sp_check_depo_amount_sync]
+	@depo_id int,
+	@user_id int,
+	@date smalldatetime = NULL,
+	@op_id int = NULL
+AS
+SET NOCOUNT ON;
+
+DECLARE
+	@r int
+
+CREATE TABLE #docs(
+	DEPO_ID int NOT NULL,
+	REC_ID int NOT NULL,
+	OP_CODE varchar(5) NULL,
+	PRIMARY KEY (DEPO_ID, REC_ID))
+
+INSERT INTO #docs(DEPO_ID, REC_ID, OP_CODE)
+SELECT D.DEPO_ID, O.REC_ID, O.OP_CODE
+FROM dbo.DEPO_DEPOSITS D (NOLOCK)
+	INNER JOIN dbo.OPS_HELPER_0000 H (NOLOCK) ON (H.ACC_ID = D.DEPO_ACC_ID)
+	INNER JOIN dbo.OPS_0000 O (NOLOCK) ON (O.REC_ID = H.REC_ID)
+	LEFT OUTER JOIN dbo.DEPO_OP DO (NOLOCK) ON (H.REC_ID = DO.DOC_REC_ID) OR (O.PARENT_REC_ID = DO.DOC_REC_ID) OR (H.REC_ID = DO.ACCRUE_DOC_REC_ID) OR (O.PARENT_REC_ID = DO.ACCRUE_DOC_REC_ID)
+WHERE (D.DEPO_ID = @depo_id) AND (D.STATE > 40) AND (D.STATE < 240) AND ((@date IS NULL) OR (H.DT <= @date)) AND (DO.OP_ID IS NULL)
+IF @@ERROR <> 0 BEGIN RAISERROR('ERROR: GET OPERATIONS', 16, 1); RETURN (1); END
+
+IF NOT EXISTS(SELECT * FROM #docs)
+	RETURN 0
+
+DECLARE
+	@perc_flags int,
+	@pfLeaveTrail int,
+	@need_trail bit
+
+SET @pfLeaveTrail = 4
+
+SELECT @perc_flags = PERC_FLAGS
+FROM dbo.DEPO_DEPOSITS (NOLOCK)
+WHERE DEPO_ID = @depo_id
+IF @@ERROR <> 0 AND @@ROWCOUNT <> 1 BEGIN RAISERROR('ERROR: DEPOSIT CRED PERC NOT FOUND', 16, 1); RETURN (1); END
+
+SET @need_trail = (@perc_flags & @pfLeaveTrail)
+
+IF @need_trail = 1
+BEGIN 
+	DELETE FROM #docs
+	WHERE ISNULL(OP_CODE, '') IN ('*%TR*', '*%RL*')
+END
+
+IF EXISTS(SELECT * FROM #docs)
+	RETURN 1
+
+RETURN 0
+
+GO

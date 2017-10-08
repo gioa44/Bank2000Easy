@@ -1,0 +1,10 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE PROCEDURE [impexp].[open_day] (@date smalldatetime)
+AS
+
+SET NOCOUNT ON;
+GO

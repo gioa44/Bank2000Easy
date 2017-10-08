@@ -1,0 +1,12 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
+CREATE FUNCTION [dbo].[loan_const_op_correct_collateral]()
+RETURNS INT
+AS
+BEGIN
+	RETURN (116)
+END
+GO

@@ -1,0 +1,19 @@
+CREATE TABLE [dbo].[PAYMENTS_PC_INFO]
+(
+[REC_ID] [int] NOT NULL IDENTITY(1, 1),
+[DOC_REC_ID] [int] NULL,
+[REC_STATE] [tinyint] NOT NULL,
+[BRANCH_ID] [int] NOT NULL,
+[ACCOUNT] [varchar] (20) COLLATE Latin1_General_BIN NULL,
+[TERMINAL_ID] [varchar] (8) COLLATE Latin1_General_BIN NULL,
+[AMOUNT] [dbo].[TAMOUNT] NULL,
+[CCY] [dbo].[TISO] NULL,
+[REF_NUM] [varchar] (12) COLLATE Latin1_General_BIN NULL,
+[CARD_ID] [varchar] (19) COLLATE Latin1_General_BIN NULL,
+[EXP_DATE] [varchar] (4) COLLATE Latin1_General_BIN NULL,
+[APPR_CODE] [varchar] (4000) COLLATE Latin1_General_BIN NULL,
+[RESULT] [varchar] (4000) COLLATE Latin1_General_BIN NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[PAYMENTS_PC_INFO] ADD CONSTRAINT [PK_PAYMENTS_PC_INFO] PRIMARY KEY CLUSTERED  ([REC_ID]) ON [PRIMARY]
+GO
